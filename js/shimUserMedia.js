@@ -7,5 +7,7 @@ navigator.getUserMedia	= navigator.getUserMedia
 
 // shim for window.URL.createObjectURL
 window.URL	= window.URL || window.webkitURL;
-if( window.URL )	window.URL.createObjectURL	= window.URL.createObjectURL || webkitURL.createObjectURL;
+if( window.URL ){
+	window.URL.createObjectURL	= window.URL.createObjectURL || webkitURL.createObjectURL;
+}
 
