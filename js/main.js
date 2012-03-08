@@ -55,6 +55,25 @@ function animate(){
 
 function render(){
 
+	(function(){
+		var videoCanvas	= videoTex.image;
+		// copy the srcElement into videoCanvas
+		videoCanvas.getContext('2d').drawImage(srcElement,0,0, videoCanvas.width, videoCanvas.height);
+		// warn three.js that videoTex changed
+		videoTex.needsUpdate	= true;
+	}());
+	// do a mirror X on the videoCanvas - usefull if the video is a webcam
+	// - NOTE: this inverse the marker too... so detection fails...
+	// - to inverse the marker image would fix it ?
+	//;(function(){
+	//	var ctx	= videoCanvas.getContext('2d');
+	//	ctx.save();
+	//	ctx.translate(videoCanvas.width,0);
+	//	ctx.scale(-1,1);
+	//	ctx.drawImage(srcElement,0,0, videoCanvas.width, videoCanvas.height);
+	//	ctx.restore();
+	//})();
+	
 	// TODO put this if() in THREEx.JSARToolKit
 	if( srcElement instanceof HTMLImageElement ){
 		threexAR.update();
@@ -68,6 +87,10 @@ function render(){
 	renderer.render(videoScene, videoCam);
 	renderer.render(scene, camera);
 };
+
+//////////////////////////////////////////////////////////////////////////////////
+//										//
+//////////////////////////////////////////////////////////////////////////////////
 
 
 window.onload	= function(){
@@ -121,29 +144,51 @@ if( false ){
 //										//
 //////////////////////////////////////////////////////////////////////////////////
 
-
 // TODO global to remove
 var videoTex;
 var videoCam, 	videoScene;
 
+// Create scene and quad for the video.
+var videoCanvas		= document.createElement('canvas');
+videoCanvas.width	= srcElement.width;
+videoCanvas.height	= srcElement.height;
+// ASK: so jsartoolkit work only with 3/4 aspect ? it truncate: the output.. not cool
+//videoCanvas.height	= srcElement.width*3/4;
+videoTex 	= new THREE.Texture(videoCanvas);
+var geometry	= new THREE.PlaneGeometry(2, 2, 0);
+var material	= new THREE.MeshBasicMaterial({
+	color		: 0x4444AA,
+	map		: videoTex,
+	depthTest	: false,
+	depthWrite	: false
+});
+var plane	= new THREE.Mesh(geometry, material );
+videoScene	= new THREE.Scene();
+videoCam	= new THREE.Camera();
+videoScene.add(plane);
+videoScene.add(videoCam);
+
+//////////////////////////////////////////////////////////////////////////////////
+//										//
+//////////////////////////////////////////////////////////////////////////////////
+
+
 var THREEx	= THREEx	|| {};
 THREEx.JSARToolKit	= function(opts){
 	// parse arguments
-	opts		= opts || {};
-	this._threshold	= opts.threshold !== undefined ? opts.threshold : 50;	
-	this._debug	= opts.debug !== undefined ? opts.debug : false;	
-
+	opts			= opts || {};
+	this._threshold		= opts.threshold !== undefined ? opts.threshold : 50;	
+	this._debug		= opts.debug !== undefined ? opts.debug : false;
+	this._canvasRasterW	= opts.canvasRasterW || 640;
+	this._canvasRasterH	= opts.canvasRasterH || 480;
+// TODO add srcElement
 
 	this._markers	= {};
 	
 	var canvasRaster	= document.createElement('canvas');
 	this._canvasRaster	= canvasRaster;
-	canvasRaster.width	= 320;
-	canvasRaster.height	= 240;
-	canvasRaster.width	= 320*2;
-	canvasRaster.height	= 240*2;
-	//canvasRaster.width	= srcElement.width;
-	//canvasRaster.height	= srcElement.height;
+	canvasRaster.width	= this._canvasRasterW;
+	canvasRaster.height	= this._canvasRasterH;
 	document.body.appendChild(canvasRaster);
 	
 	// enable the debug
@@ -160,13 +205,6 @@ THREEx.JSARToolKit	= function(opts){
 		document.body.appendChild(debugCanvas);		
 	}
 
-	var videoCanvas		= document.createElement('canvas');
-	videoCanvas.width	= srcElement.width;
-	videoCanvas.height	= srcElement.height;
-	//videoCanvas.height	= srcElement.width*3/4;	// ASK: so jsartoolkit work only with 3/4 aspect ?
-							// truncate: the output.. not cool
-
-
 	var arRaster	= new NyARRgbRaster_Canvas2D(canvasRaster);
 	var arParam	= new FLARParam(canvasRaster.width,canvasRaster.height);
 	var arDetector	= new FLARMultiIdMarkerDetector(arParam, 120);
@@ -178,21 +216,6 @@ THREEx.JSARToolKit	= function(opts){
 	var tmpGlMatCam	= new Float32Array(16);
 	arParam.copyCameraMatrix(tmpGlMatCam, 10, 10000);
 	this._copyMatrixGl2Threejs(tmpGlMatCam, camera.projectionMatrix);
-      
-	// Create scene and quad for the video.
-	videoTex 	= new THREE.Texture(videoCanvas);
-	var geometry	= new THREE.PlaneGeometry(2, 2, 0);
-	var material	= new THREE.MeshBasicMaterial({
-		color		: 0x4444AA,
-		map		: videoTex,
-		depthTest	: false,
-		depthWrite	: false
-	});
-	var plane	= new THREE.Mesh(geometry, material );
-	videoScene	= new THREE.Scene();
-	videoCam	= new THREE.Camera();
-	videoScene.add(plane);
-	videoScene.add(videoCam);
 }
 
 /**
@@ -205,30 +228,9 @@ THREEx.JSARToolKit.prototype.update	= function()
 	var arRaster	= this._arRaster;
 	var arDetector	= this._arDetector;
 
-	//console.log("videoText")
-
-	var videoCanvas	= videoTex.image;
-	// copy the srcElement into videoCanvas
-	videoCanvas.getContext('2d').drawImage(srcElement,0,0, videoCanvas.width, videoCanvas.height);
-	// warn three.js that videoTex changed
-	videoTex.needsUpdate	= true;
-	
-	// do a mirror X on the videoCanvas - usefull if the video is a webcam
-	// - NOTE: this inverse the marker too... so detection fails...
-	// - to inverse the marker image would fix it ?
-	//;(function(){
-	//	var ctx	= videoCanvas.getContext('2d');
-	//	ctx.save();
-	//	ctx.translate(videoCanvas.width,0);
-	//	ctx.scale(-1,1);
-	//	ctx.drawImage(srcElement,0,0, videoCanvas.width, videoCanvas.height);
-	//	ctx.restore();
-	//})();
-	
 	var ctxRaster	= canvasRaster.getContext('2d');
-	// copy videoCanvas into canvasRaster
-	//ctxRaster.drawImage(videoCanvas, 0,0, 320, 240);
-	ctxRaster.drawImage(videoCanvas, 0,0, ctxRaster.canvas.width, ctxRaster.canvas.height);
+	// copy srcElement into canvasRaster
+	ctxRaster.drawImage(srcElement, 0,0, ctxRaster.canvas.width, ctxRaster.canvas.height);
 	// warn JSARToolKit that the canvas changed
 	canvasRaster.changed	= true;
 
@@ -254,7 +256,7 @@ THREEx.JSARToolKit.prototype.update	= function()
 		arDetector.getTransformMatrix(idx, tmpArMat);
 		markers[markerId].transform = Object.asCopy(tmpArMat);
 	}
-	// handle markers age
+	// handle markers age - deleting old markers too
 	Object.keys(markers).forEach(function(markerId){
 		var marker = markers[markerId];
 		if( marker.age > 3) {
