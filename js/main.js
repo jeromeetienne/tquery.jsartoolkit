@@ -149,6 +149,7 @@ var videoTex;
 var videoCam, 	videoScene;
 
 // Create scene and quad for the video.
+// - TODO this canvas seems useless
 var videoCanvas		= document.createElement('canvas');
 videoCanvas.width	= srcElement.width;
 videoCanvas.height	= srcElement.height;
@@ -257,6 +258,7 @@ THREEx.JSARToolKit.prototype.update	= function()
 		markers[markerId].transform = Object.asCopy(tmpArMat);
 	}
 	// handle markers age - deleting old markers too
+	// marker.age is the amount of iteration without detection
 	Object.keys(markers).forEach(function(markerId){
 		var marker = markers[markerId];
 		if( marker.age > 3) {
@@ -305,8 +307,6 @@ THREEx.JSARToolKit.prototype.update	= function()
 			var scaleMat	= new THREE.Matrix4().setScale(-1, -1, -1);
 			marker.object3d.matrix.multiply(tmpTjMat, scaleMat);
 		}
-		
-
 		marker.object3d.matrixWorldNeedsUpdate = true;				
 	}.bind(this));
 }
@@ -322,7 +322,7 @@ THREEx.JSARToolKit.prototype._copyMatrixGl2Threejs	 = function(m, tMat){
 	// argument - sanity check
 	console.assert( m instanceof Float32Array && m.length === 16 );
 	console.assert( tMat instanceof THREE.Matrix4 );
-	
+
 	return tMat.set(
 		m[0], m[4], m[8], m[12],
 		m[1], m[5], m[9], m[13],
