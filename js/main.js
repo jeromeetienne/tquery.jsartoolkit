@@ -50,7 +50,7 @@ videoEl.volume	= 0;
 videoEl.autoplay= true;
 videoEl.controls= true;
 
-if( true ){
+if( false ){
 	// sanity check - if the API available
 	if( !navigator.getUserMedia )	throw new Error("navigator.getUserMedia not found.");
 	if( !window.URL )		throw new Error("window.URL not found.");
@@ -64,7 +64,7 @@ if( true ){
 	var srcElement	= videoEl;
 }
 
-if( false ){
+if( true ){
 	videoEl.src = './videos/swap_loop.ogg';
 	var srcElement	= videoEl;
 	var threshold	= 50;
@@ -75,6 +75,12 @@ if( false ){
 	image.setAttribute('src', 'images/armchair.jpg');
 	var srcElement	= image;
 	var threshold	= 150;
+}
+if( false ){
+	var image	= document.createElement("img");
+	image.setAttribute('src', 'images/chalk_multi.jpg');
+	var srcElement	= image;
+	var threshold	= 110;
 }
 document.body.appendChild(srcElement);	
 
@@ -174,6 +180,7 @@ window.onload	= function(){
 	threexAR	= new THREEx.JSARToolKit({
 		srcElement	: srcElement,
 		threshold	: threshold,
+		debug		: true,
 		callback	: function(event){
 			console.log("event", event.type, event.markerId)
 			if( event.type === 'create' ){

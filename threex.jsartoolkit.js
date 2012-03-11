@@ -10,9 +10,14 @@
  *   http://github.com/kig/JSARToolKit
 */
 
-
+/**
+ * @namespace
+*/
 var THREEx	= THREEx	|| {};
 
+/**
+ * 
+*/
 THREEx.JSARToolKit	= function(opts){
 	// parse arguments
 	opts			= opts || {};
@@ -22,6 +27,7 @@ THREEx.JSARToolKit	= function(opts){
 	this._debug		= opts.debug !== undefined ? opts.debug : false;
 	this._canvasRasterW	= opts.canvasRasterW	|| 640;
 	this._canvasRasterH	= opts.canvasRasterH	|| 480;
+	this._maxAge		= opts.maxAge		|| 1;
 
 	this._markers		= {};
 	
@@ -45,14 +51,26 @@ THREEx.JSARToolKit	= function(opts){
 		document.body.appendChild(debugCanvas);		
 	}
 
+	// Create a RGB raster object for the 2D canvas.
+	// JSARToolKit uses raster objects to read image data.
+	// Note that you need to set canvas.changed = true on every frame.
 	var arRaster	= new NyARRgbRaster_Canvas2D(canvasRaster);
+	// FLARParam is the thing used by FLARToolKit to set camera parameters.
+	// Here we create a FLARParam for images with 320x240 pixel dimensions.
 	var arParam	= new FLARParam(canvasRaster.width,canvasRaster.height);
-	var arDetector	= new FLARMultiIdMarkerDetector(arParam, 120);
+	// The FLARMultiIdMarkerDetector is the actual detection engine for marker detection.
+	// It detects multiple ID markers. ID markers are special markers that encode a number.
+	// - 100 seems to be a zoom factor for the resulting matrix
+	var arDetector	= new FLARMultiIdMarkerDetector(arParam, 100);
+	// For tracking video set continue mode to true. In continue mode, the detector
+	// tracks markers across multiple frames.
 	arDetector.setContinueMode(true);
 	this._arRaster	= arRaster;
 	this._arDetector= arDetector;
 
 	// Next we need to make the Three.js camera use the FLARParam matrix.
+	// Copy the camera perspective matrix from the FLARParam to the WebGL library camera matrix.
+	// The second and third parameters determine the zNear and zFar planes for the perspective matrix.
 	var tmpGlMatCam	= new Float32Array(16);
 	arParam.copyCameraMatrix(tmpGlMatCam, 10, 10000);
 	this._copyMatrixGl2Threejs(tmpGlMatCam, camera.projectionMatrix);
@@ -76,10 +94,14 @@ THREEx.JSARToolKit.prototype.update	= function()
 	// warn JSARToolKit that the canvas changed
 	canvasRaster.changed	= true;
 
-	// detect markers
+	// Do marker detection by using the detector object on the raster object.
+	// The threshold parameter determines the threshold value
+	// for turning the video frame into a 1-bit black-and-white image.
 	var nDetected	= arDetector.detectMarkerLite(arRaster, this._threshold);
+	// Create a NyARTransMatResult object for getting the marker translation matrices.
 	var tmpArMat	= new NyARTransMatResult();
-	for (var idx = 0; idx < nDetected; idx++) {
+	// Go through the detected markers and get their IDs and transformation matrices.
+	for( var idx = 0; idx < nDetected; idx++ ){
 		var markerId;
 		// extract the markerId
 		var id	= arDetector.getIdMarkerData(idx);
@@ -114,16 +136,15 @@ THREEx.JSARToolKit.prototype.update	= function()
 	// marker.age is the amount of iteration without detection
 	Object.keys(markers).forEach(function(markerId){
 		var marker = markers[markerId];
-		if( marker.age > 3) {
+		marker.age++;
+		if( marker.age > this._maxAge ){
+			delete markers[markerId];
 			events.push({
 				type	: "delete",
 				markerId: markerId
 			});
-			delete markers[markerId];
-			scene.remove(marker.object3d);
 		}
-		marker.age++;
-	});
+	}.bind(this));
 	// notify all the events
 	events.forEach(function(event){
 		this._callback(event);	
