@@ -7,6 +7,18 @@
 		<link  href='css/main.css' rel="stylesheet" />
 	</head>
 	<body>
+		<div>
+			<script>
+			function setThreshold(value){
+				var element	= document.querySelectorAll("#threshold")[0];
+				element.innerHTML	= value;
+				threexAR._threshold	= value;
+			}
+			</script>
+			Threshold:
+			<input type="range" min="0" max="256" onChange="setThreshold(this.value);" />
+			<span id="threshold"></span>
+		</div>
 		<script src='threex.jsartoolkit.js'></script>
 		<script src='js/main.js'></script>
 	</body>
