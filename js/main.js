@@ -4,7 +4,7 @@ var threexAR;
 var renderer	= new THREE.WebGLRenderer({
 	antialias	: true
 });
-renderer.setSize(640, 480);
+renderer.setSize(320, 240);
 document.body.appendChild(renderer.domElement);
 
 // create the scene
@@ -50,7 +50,7 @@ videoEl.volume	= 0;
 videoEl.autoplay= true;
 videoEl.controls= true;
 
-if( false ){
+if( true ){
 	// sanity check - if the API available
 	if( !navigator.getUserMedia )	throw new Error("navigator.getUserMedia not found.");
 	if( !window.URL )		throw new Error("window.URL not found.");
@@ -64,12 +64,18 @@ if( false ){
 	var srcElement	= videoEl;
 }
 
-if( true ){
+if( false ){
 	videoEl.src = './videos/swap_loop.ogg';
 	var srcElement	= videoEl;
 	var threshold	= 50;
 }
 
+if( false ){
+	videoEl.src = './videos/dog.ogg';
+	var srcElement	= videoEl;
+	var threshold	= 50;
+}
+ 
 if( false ){
 	var image	= document.createElement("img");
 	image.setAttribute('src', 'images/armchair.jpg');
@@ -84,7 +90,9 @@ if( false ){
 }
 document.body.appendChild(srcElement);	
 
-
+// update the UI
+document.querySelectorAll("#thresholdText")[0].innerHTML	= threshold;
+document.querySelectorAll("#thresholdRange")[0].value		= threshold;
 
 //////////////////////////////////////////////////////////////////////////////////
 //										//
@@ -180,9 +188,11 @@ window.onload	= function(){
 	threexAR	= new THREEx.JSARToolKit({
 		srcElement	: srcElement,
 		threshold	: threshold,
+		//canvasRasterW	: 640,
+		//canvasRasterH	: 480,
 		debug		: true,
 		callback	: function(event){
-			console.log("event", event.type, event.markerId)
+			//console.log("event", event.type, event.markerId)
 			if( event.type === 'create' ){
 				onCreate(event);
 			}else if( event.type === 'delete' ){

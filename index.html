@@ -10,14 +10,24 @@
 		<div>
 			<script>
 			function setThreshold(value){
-				var element	= document.querySelectorAll("#threshold")[0];
+				var element	= document.querySelectorAll("#thresholdText")[0];
 				element.innerHTML	= value;
 				threexAR._threshold	= value;
 			}
+			function setDebug(value){
+				var element	= document.getElementById('debugCanvas');
+				if( !element )	return;
+				element.style.display	= value ? '' : 'none';
+			}
 			</script>
 			Threshold:
-			<input type="range" min="0" max="256" onChange="setThreshold(this.value);" />
-			<span id="threshold"></span>
+			<input id="thresholdRange" type="range" min="0" max="256" onChange="setThreshold(this.value);" />
+			<span id="thresholdText"></span>
+			|
+			<label>
+			debug:
+			<input type="checkbox" checked onChange="setDebug(this.checked);"/>
+			</label>
 		</div>
 		<script src='threex.jsartoolkit.js'></script>
 		<script src='js/main.js'></script>

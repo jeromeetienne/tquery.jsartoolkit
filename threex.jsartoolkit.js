@@ -25,8 +25,8 @@ THREEx.JSARToolKit	= function(opts){
 	this._callback		= opts.callback		|| console.assert(false, "callback MUST be provided");
 	this._threshold		= opts.threshold !== undefined ? opts.threshold : 128;	
 	this._debug		= opts.debug !== undefined ? opts.debug : false;
-	this._canvasRasterW	= opts.canvasRasterW	|| 640;
-	this._canvasRasterH	= opts.canvasRasterH	|| 480;
+	this._canvasRasterW	= opts.canvasRasterW	|| this._srcElement.width;
+	this._canvasRasterH	= opts.canvasRasterH	|| this._srcElement.height;
 	this._maxAge		= opts.maxAge		|| 1;
 
 	this._markers		= {};
