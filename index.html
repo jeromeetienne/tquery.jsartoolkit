@@ -14,20 +14,27 @@
 				element.innerHTML	= value;
 				threexAR._threshold	= value;
 			}
-			function setDebug(value){
-				var element	= document.getElementById('debugCanvas');
+			function setVisible(domId, value){
+				var element	= document.getElementById(domId);
 				if( !element )	return;
 				element.style.display	= value ? '' : 'none';
 			}
 			</script>
+			<label>srcElement:
+				<input type="checkbox" checked onChange="setVisible('srcElement', this.checked);"/>
+			</label>
+			|
+			<label>canvasRaster:
+				<input type="checkbox" checked onChange="setVisible('canvasRaster', this.checked);"/>
+			</label>
+			|
+			<label>debug:
+				<input type="checkbox" checked onChange="setVisible('debugCanvas', this.checked);"/>
+			</label>
+			|
 			Threshold:
 			<input id="thresholdRange" type="range" min="0" max="256" onChange="setThreshold(this.value);" />
 			<span id="thresholdText"></span>
-			|
-			<label>
-			debug:
-			<input type="checkbox" checked onChange="setDebug(this.checked);"/>
-			</label>
 		</div>
 		<script src='threex.jsartoolkit.js'></script>
 		<script src='js/main.js'></script>

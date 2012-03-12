@@ -35,7 +35,6 @@ THREEx.JSARToolKit	= function(opts){
 	this._canvasRaster	= canvasRaster;
 	canvasRaster.width	= this._canvasRasterW;
 	canvasRaster.height	= this._canvasRasterH;
-	document.body.appendChild(canvasRaster);
 	
 	// enable the debug
 	if( this._debug ){
@@ -76,6 +75,10 @@ THREEx.JSARToolKit	= function(opts){
 	this._copyMatrixGl2Threejs(tmpGlMatCam, camera.projectionMatrix);
 }
 
+THREEx.JSARToolKit.prototype.canvasRaster	= function()
+{
+	return this._canvasRaster
+}
 /**
  * update to call at every rendering-loop iteration
 */
