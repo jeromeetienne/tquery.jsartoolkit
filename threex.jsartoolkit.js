@@ -23,6 +23,7 @@ THREEx.JSARToolKit	= function(opts){
 	opts			= opts || {};
 	this._srcElement	= opts.srcElement	|| console.assert(false, "srcElement MUST be provided");
 	this._callback		= opts.callback		|| console.assert(false, "callback MUST be provided");
+	this._camera 		= opts.camera		|| console.assert(false, "camera MUST be provided");
 	this._threshold		= opts.threshold !== undefined ? opts.threshold : 128;	
 	this._debug		= opts.debug !== undefined ? opts.debug : false;
 	this._canvasRasterW	= opts.canvasRasterW	|| this._srcElement.width;
@@ -72,7 +73,12 @@ THREEx.JSARToolKit	= function(opts){
 	// The second and third parameters determine the zNear and zFar planes for the perspective matrix.
 	var tmpGlMatCam	= new Float32Array(16);
 	arParam.copyCameraMatrix(tmpGlMatCam, 10, 10000);
-	this._copyMatrixGl2Threejs(tmpGlMatCam, camera.projectionMatrix);
+	this._copyMatrixGl2Threejs(tmpGlMatCam, this._camera.projectionMatrix);
+	
+	// Create a NyARTransMatResult object for getting the marker translation matrices.
+	this._tmpArMat	= new NyARTransMatResult();
+	
+	this._tmpGlMat	= new Float32Array(16);
 }
 
 THREEx.JSARToolKit.prototype.canvasRaster	= function()
@@ -89,11 +95,10 @@ THREEx.JSARToolKit.prototype.update	= function()
 	var arRaster	= this._arRaster;
 	var arDetector	= this._arDetector;
 	var events	= [];
-	var tmpGlMat	= new Float32Array(16);
 
 	var ctxRaster	= canvasRaster.getContext('2d');
 	// copy srcElement into canvasRaster
-	ctxRaster.drawImage(srcElement, 0,0, ctxRaster.canvas.width, ctxRaster.canvas.height);
+	ctxRaster.drawImage(this._srcElement, 0,0, ctxRaster.canvas.width, ctxRaster.canvas.height);
 	// warn JSARToolKit that the canvas changed
 	canvasRaster.changed	= true;
 
@@ -101,8 +106,7 @@ THREEx.JSARToolKit.prototype.update	= function()
 	// The threshold parameter determines the threshold value
 	// for turning the video frame into a 1-bit black-and-white image.
 	var nDetected	= arDetector.detectMarkerLite(arRaster, this._threshold);
-	// Create a NyARTransMatResult object for getting the marker translation matrices.
-	var tmpArMat	= new NyARTransMatResult();
+	
 	// Go through the detected markers and get their IDs and transformation matrices.
 	for( var idx = 0; idx < nDetected; idx++ ){
 		var markerId;
@@ -121,8 +125,8 @@ THREEx.JSARToolKit.prototype.update	= function()
 		markers[markerId]	= markers[markerId] || {};
 		markers[markerId].age	= 0;
 		// FIXME Object.asCopy is a dirty kludge - jsartoolkit is declaring this on global space 
-		arDetector.getTransformMatrix(idx, tmpArMat);
-		markers[markerId].transform = Object.asCopy(tmpArMat);
+		arDetector.getTransformMatrix(idx, this._tmpArMat);
+		
 		// generate the event
 		var marker	= markers[markerId];
 		var event	= {
@@ -131,9 +135,9 @@ THREEx.JSARToolKit.prototype.update	= function()
 			matrix	: new THREE.Matrix4()
 		};
 		events.push(event);
-		// todo noneed to store marker.transform
-		this._copyMatrixAr2Gl(marker.transform, tmpGlMat);
-		this._copyMatrixGl2Threejs(tmpGlMat, event.matrix);
+		
+		this._copyMatrixAr2Gl(this._tmpArMat, this._tmpGlMat);
+		this._copyMatrixGl2Threejs(this._tmpGlMat, event.matrix);
 	}
 	// handle markers age - deleting old markers too
 	// marker.age is the amount of iteration without detection
