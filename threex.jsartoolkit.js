@@ -23,6 +23,7 @@ THREEx.JSARToolKit	= function(opts){
 	opts			= opts || {};
 	this._srcElement	= opts.srcElement	|| console.assert(false, "srcElement MUST be provided");
 	this._callback		= opts.callback		|| console.assert(false, "callback MUST be provided");
+	this._camera 		= opts.camera		|| console.assert(false, "camera MUST be provided");
 	this._threshold		= opts.threshold !== undefined ? opts.threshold : 128;	
 	this._debug		= opts.debug !== undefined ? opts.debug : false;
 	this._canvasRasterW	= opts.canvasRasterW	|| this._srcElement.width;
@@ -72,7 +73,7 @@ THREEx.JSARToolKit	= function(opts){
 	// The second and third parameters determine the zNear and zFar planes for the perspective matrix.
 	var tmpGlMatCam	= new Float32Array(16);
 	arParam.copyCameraMatrix(tmpGlMatCam, 10, 10000);
-	this._copyMatrixGl2Threejs(tmpGlMatCam, camera.projectionMatrix);
+	this._copyMatrixGl2Threejs(tmpGlMatCam, this._camera.projectionMatrix);
 }
 
 THREEx.JSARToolKit.prototype.canvasRaster	= function()
@@ -93,7 +94,7 @@ THREEx.JSARToolKit.prototype.update	= function()
 
 	var ctxRaster	= canvasRaster.getContext('2d');
 	// copy srcElement into canvasRaster
-	ctxRaster.drawImage(srcElement, 0,0, ctxRaster.canvas.width, ctxRaster.canvas.height);
+	ctxRaster.drawImage(this._srcElement, 0,0, ctxRaster.canvas.width, ctxRaster.canvas.height);
 	// warn JSARToolKit that the canvas changed
 	canvasRaster.changed	= true;
 
